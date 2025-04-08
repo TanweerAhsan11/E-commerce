@@ -2,21 +2,27 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "tanweerahsan11/ecommerce-site"
-        DOCKER_CREDENTIALS_ID = "dockerhub-creds"
+        DOCKER_IMAGE = "tanweerahsan11/ecommerce-app" // Replace with your Docker Hub username/image
+        DOCKER_CREDENTIALS_ID = "dockerhub-creds"     // Set this up in Jenkins credentials
     }
 
-    stage('Clone Repository') {
-    steps {
-        git branch: 'main', url: 'https://github.com/TanweerAhsan11/E-commerce'
-    }
-}
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/TanweerAhsan11/E-commerce'
+            }
+        }
 
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}")
+                    docker.build("${DOCKER_IMAGE}:latest")
                 }
             }
         }
@@ -24,8 +30,8 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
-                        docker.image("${IMAGE_NAME}").push("latest")
+                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
+                        docker.image("${DOCKER_IMAGE}:latest").push()
                     }
                 }
             }
@@ -33,8 +39,20 @@ pipeline {
 
         stage('Deploy to Kubernetes via Ansible') {
             steps {
-                echo 'We’ll run the Ansible deployment here in the next step...'
+                sh '''
+                    cd ansible
+                    ansible-playbook deploy.yml
+                '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment successful! ✅"
+        }
+        failure {
+            echo "Build failed ❌"
         }
     }
 }
