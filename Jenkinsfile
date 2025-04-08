@@ -6,12 +6,12 @@ pipeline {
         DOCKER_CREDENTIALS_ID = "dockerhub-creds"
     }
 
-    stages {
-        stage('Clone Repository') {
-            steps {
-                git credentialsId: 'github-creds', url: 'https://github.com/TanweerAhsan11/E-commerce'
-            }
-        }
+    stage('Clone Repository') {
+    steps {
+        git branch: 'main', url: 'https://github.com/TanweerAhsan11/E-commerce'
+    }
+}
+
 
         stage('Build Docker Image') {
             steps {
