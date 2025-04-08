@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "tanweerahsan11/ecommerce-site"
+        DOCKER_CREDENTIALS_ID = "dockerhub-creds"
+    }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -10,19 +15,25 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo 'Docker image build step will go here...'
+                script {
+                    docker.build("${IMAGE_NAME}")
+                }
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Push to DockerHub') {
             steps {
-                echo 'Docker push step will go here...'
+                script {
+                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKER_CREDENTIALS_ID}") {
+                        docker.image("${IMAGE_NAME}").push("latest")
+                    }
+                }
             }
         }
 
         stage('Deploy to Kubernetes via Ansible') {
             steps {
-                echo 'Ansible and Kubernetes deployment step will go here...'
+                echo 'We’ll run the Ansible deployment here in the next step...'
             }
         }
     }
